@@ -1,0 +1,208 @@
+# docker-compose.yml
+---
+
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/sonarr:/config
+      - /data/media/tv:/tv
+      - /data/downloads:/downloads
+    ports:
+      - "8989:8989"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/radarr:/config
+      - /data/media/movies:/movies
+      - /data/downloads:/downloads
+    ports:
+      - "7878:7878"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/prowlarr:/config
+    ports:
+      - "9696:9696"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    environment:
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/recyclarr:/config
+    secrets:
+      - radarr_api_key
+      - sonarr_api_key
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  listrr:
+    image: theultimatecoder/listrr.pro:latest
+    container_name: listrr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/listrr:/app/data
+    ports:
+      - "5060:80"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+    volumes:
+      - /opt/docker/config/qbittorrent:/config
+      - /data/downloads:/downloads
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  emby:
+    image: lscr.io/linuxserver/emby:latest
+    container_name: emby
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/emby:/config
+      - /data/media/tv:/data/tvshows
+      - /data/media/movies:/data/movies
+    ports:
+      - "8096:8096"
+      - "8920:8920" # Optional for HTTPS
+    devices:
+      - /dev/dri:/dev/dri # Optional for hardware transcoding
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    environment:
+      - TZ=Etc/UTC
+      - PUID=1000
+      - PGID=1000
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=false # We will run a separate node
+    volumes:
+      - /opt/docker/config/tdarr/server:/app/server
+      - /opt/docker/config/tdarr/configs:/app/configs
+      - /opt/docker/config/tdarr/logs:/app/logs
+      - /data/media:/media
+      - /data/transcode_cache:/temp
+    ports:
+      - "8265:8265" # Web UI
+      - "8266:8266" # Server
+    devices:
+      - /dev/dri:/dev/dri # Optional for hardware transcoding
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  tdarr-node:
+    container_name: tdarr-node
+    image: ghcr.io/haveagitgat/tdarr_node:latest
+    depends_on:
+      - tdarr
+    environment:
+      - TZ=Etc/UTC
+      - PUID=1000
+      - PGID=1000
+      - nodeID=MainNode
+      - nodeIP=tdarr-node
+      - serverIP=tdarr
+      - serverPort=8266
+    volumes:
+      - /opt/docker/config/tdarr/configs:/app/configs
+      - /opt/docker/config/tdarr/logs:/app/logs
+      - /data/media:/media
+      - /data/transcode_cache:/temp
+    devices:
+      - /dev/dri:/dev/dri # Optional for hardware transcoding
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/config/homarr/configs:/app/data/configs
+      - /opt/docker/config/homarr/icons:/app/public/icons
+    ports:
+      - "7575:7575"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Etc/UTC
+    ports:
+      - "8191:8191"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+networks:
+  media-net:
+    driver: bridge
+
+secrets:
+  radarr_api_key:
+    file:./secrets/radarr_api_key.txt
+  sonarr_api_key:
+    file:./secrets/sonarr_api_key.txt
