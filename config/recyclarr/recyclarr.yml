@@ -1,0 +1,113 @@
+# https://recyclarr.dev/wiki/guide-configs
+# https://trash-guides.info/Sonarr/sonarr-setup-quality-profiles
+recyclarr:
+  sonarr:
+    - instance_name: sonarr
+      base_url: http://sonarr:8989
+      api_key: !secret sonarr_api_key
+
+      media_naming:
+        series: "{Series TitleYear} [tvdb-{TvdbId}]"
+        season: "Season {season:00}"
+        episodes:
+          rename: true
+          standard: "{Series TitleYear} - S{season:00}E{episode:00} - {Episode CleanTitle:90} {[Custom Formats]}{[Quality Full]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoDynamicRangeType]}{[Mediainfo VideoCodec]}{-Release Group}"
+          daily: "{Series TitleYear} - {Air-Date} - {Episode CleanTitle:90} {[Custom Formats]}{[Quality Full]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoDynamicRangeType]}{[Mediainfo VideoCodec]}{-Release Group}"
+          anime: "{Series TitleYear} - S{season:00}E{episode:00} - {absolute:000} - {Episode CleanTitle:90} {[Custom Formats]}{[Quality Full]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{MediaInfo AudioLanguages}{[MediaInfo VideoDynamicRangeType]}[{Mediainfo VideoCodec }{MediaInfo VideoBitDepth}bit]{-Release Group}"
+
+      quality_definition:
+        type: series
+        preferred_ratio: 1  # Adjust for file size preference
+
+      quality_profiles:
+        - name: UHD-2160p
+          upgrade_allowed: true
+          upgrade_until: Remux-2160p
+          min_format_score: 100
+          reset_unmatched_scores: true
+          qualities:
+            - name: WEB 1080p
+              qualities:
+                - WEBDL-1080p
+                - WEBRip-1080p
+            - name: Bluray 1080p
+              qualities:
+                - Bluray-1080p
+            - name: WEB 2160p
+              qualities:
+                - WEBDL-2160p
+                - WEBRip-2160p
+            - name: Bluray 2160p
+              qualities:
+                - Bluray-2160p
+            - Remux-2160p
+
+      custom_formats:
+        - trash_ids:
+            - 7c3a61a9c6cb04f52f1544be6d44a026  # DV Boost
+          score: 1000
+        - trash_ids:
+            - 0c4b99df9206d2cfac3c05ab897dd62a  # HDR10+ Boost
+          score: 500
+        - trash_ids:
+            - 505d871304820ba7106b693be6fe4a9e  # HDR
+          score: 100
+        - trash_ids:
+            - 9b27ab6498ec0f31a3353992e19434ca  # DV w/o HDR fallback
+            - 47435ece6b99a0b477caf360e79ba0bb  # x265 (HD)
+            - fbcb31d8dabd2a319072b84fc0b7249c  # Extras
+          score: -10000
+
+  radarr:
+    - instance_name: radarr
+      base_url: http://radarr:7878
+      api_key: !secret radarr_api_key
+
+      media_naming:
+        folder: "{Movie CleanTitle} ({Release Year})"
+        movie:
+          rename: true
+          standard: "{Movie CleanTitle} {(Release Year)} [tmdb-{TmdbId}] - {edition-{Edition Tags}} {[MediaInfo 3D]}{[Custom Formats]}{[Quality Full]}{[Mediainfo AudioCodec}{ Mediainfo AudioChannels]}{[MediaInfo VideoDynamicRangeType]}{[Mediainfo VideoCodec]}{-Release Group}"
+
+      quality_definition:
+        type: movie
+        preferred_ratio: 1
+
+      quality_profiles:
+        - name: UHD-2160p
+          upgrade_allowed: true
+          upgrade_until: Remux-2160p
+          min_format_score: 100
+          reset_unmatched_scores: true
+          qualities:
+            - name: WEB 1080p
+              qualities:
+                - WEBDL-1080p
+                - WEBRip-1080p
+            - name: Bluray 1080p
+              qualities:
+                - Bluray-1080p
+            - name: WEB 2160p
+              qualities:
+                - WEBDL-2160p
+                - WEBRip-2160p
+            - name: Bluray 2160p
+              qualities:
+                - Bluray-2160p
+            - Remux-2160p
+
+      custom_formats:
+        - trash_ids:
+            - 7c3a61a9c6cb04f52f1544be6d44a026  # DV Boost
+          score: 1000
+        - trash_ids:
+            - 0c4b99df9206d2cfac3c05ab897dd62a  # HDR10+ Boost
+          score: 500
+        - trash_ids:
+            - 505d871304820ba7106b693be6fe4a9e  # HDR
+          score: 250
+        - trash_ids:
+            - 9b27ab6498ec0f31a3353992e19434ca  # DV w/o HDR fallback
+            - 47435ece6b99a0b477caf360e79ba0bb  # x265 (HD)
+            - fbcb31d8dabd2a319072b84fc0b7249c  # Extras
+          score: -10000

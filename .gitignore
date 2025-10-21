@@ -2,13 +2,7 @@
 .env
 config/**/config.json
 config/**/buildarr.yml
-config/**/recyclarr.yml
-config/**/recyclarr.yaml
 config/**/arrem-sync.log
-downloads/
-transcode_cache/
-data/tv/
-data/movies/
 *.log
 *.db
 *secret*
