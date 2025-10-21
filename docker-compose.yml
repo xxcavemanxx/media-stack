@@ -8,11 +8,11 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
     volumes:
-      - /opt/docker/config/sonarr:/config
-      - /data/media/tv:/tv
-      - /data/downloads:/downloads
+      - /mnt/wsl/media-stack/config/sonarr:/config
+      - /mnt/wsl/media-stack/data/media/tv:/tv
+      - /mnt/wsl/media-stack/data/downloads:/downloads
     ports:
       - "8989:8989"
     networks:
@@ -25,11 +25,11 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
     volumes:
-      - /opt/docker/config/radarr:/config
-      - /data/media/movies:/movies
-      - /data/downloads:/downloads
+      - /mnt/wsl/media-stack/config/radarr:/config
+      - /mnt/wsl/media-stack/data/media/movies:/movies
+      - /mnt/wsl/media-stack/data/downloads:/downloads
     ports:
       - "7878:7878"
     networks:
@@ -42,9 +42,9 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
     volumes:
-      - /opt/docker/config/prowlarr:/config
+      - /mnt/wsl/media-stack/config/prowlarr:/config
     ports:
       - "9696:9696"
     networks:
@@ -55,9 +55,9 @@ services:
     image: ghcr.io/recyclarr/recyclarr:latest
     container_name: recyclarr
     environment:
-      - TZ=Etc/UTC
+      - TZ=America/Denver
     volumes:
-      - /opt/docker/config/recyclarr:/config
+      - /mnt/wsl/media-stack/config/recyclarr:/config
     secrets:
       - radarr_api_key
       - sonarr_api_key
@@ -71,9 +71,9 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
     volumes:
-      - /opt/docker/config/listrr:/app/data
+      - /mnt/wsl/media-stack/config/listrr:/app/data
     ports:
       - "5060:80"
     networks:
@@ -86,11 +86,11 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
       - WEBUI_PORT=8080
     volumes:
-      - /opt/docker/config/qbittorrent:/config
-      - /data/downloads:/downloads
+      - /mnt/wsl/media-stack/config/qbittorrent:/config
+      - /mnt/wsl/media-stack/data/downloads:/downloads
     ports:
       - "8080:8080"
       - "6881:6881"
@@ -105,16 +105,23 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
+      - NVIDIA_VISIBLE_DEVICES=all # Optional GPU acceleration
     volumes:
-      - /opt/docker/config/emby:/config
-      - /data/media/tv:/data/tvshows
-      - /data/media/movies:/data/movies
+      - /mnt/wsl/media-stack/config/emby:/config
+      - /mnt/wsl/media-stack/data/media/tv:/data/tv
+      - /mnt/wsl/media-stack/data/media/movies:/data/movies
     ports:
       - "8096:8096"
       - "8920:8920" # Optional for HTTPS
-    devices:
-      - /dev/dri:/dev/dri # Optional for hardware transcoding
+    # Optional GPU acceleration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     networks:
       - media-net
     restart: unless-stopped
@@ -123,24 +130,31 @@ services:
     container_name: tdarr
     image: ghcr.io/haveagitgat/tdarr:latest
     environment:
-      - TZ=Etc/UTC
+      - TZ=America/Denver
       - PUID=1000
       - PGID=1000
       - serverIP=0.0.0.0
       - serverPort=8266
       - webUIPort=8265
       - internalNode=false # We will run a separate node
+      - NVIDIA_VISIBLE_DEVICES=all # Optional GPU acceleration
     volumes:
-      - /opt/docker/config/tdarr/server:/app/server
-      - /opt/docker/config/tdarr/configs:/app/configs
-      - /opt/docker/config/tdarr/logs:/app/logs
-      - /data/media:/media
-      - /data/transcode_cache:/temp
+      - /mnt/wsl/media-stack/config/tdarr/server:/app/server
+      - /mnt/wsl/media-stack/config/tdarr/configs:/app/configs
+      - /mnt/wsl/media-stack/config/tdarr/logs:/app/logs
+      - /mnt/wsl/media-stack/data/media:/media
+      - /mnt/wsl/media-stack/data/transcode_cache:/temp
     ports:
       - "8265:8265" # Web UI
       - "8266:8266" # Server
-    devices:
-      - /dev/dri:/dev/dri # Optional for hardware transcoding
+    # Optional GPU acceleration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     networks:
       - media-net
     restart: unless-stopped
@@ -151,37 +165,44 @@ services:
     depends_on:
       - tdarr
     environment:
-      - TZ=Etc/UTC
+      - TZ=America/Denver
       - PUID=1000
       - PGID=1000
       - nodeID=MainNode
       - nodeIP=tdarr-node
       - serverIP=tdarr
       - serverPort=8266
+      - NVIDIA_VISIBLE_DEVICES=all # Optional GPU acceleration
     volumes:
-      - /opt/docker/config/tdarr/configs:/app/configs
-      - /opt/docker/config/tdarr/logs:/app/logs
-      - /data/media:/media
-      - /data/transcode_cache:/temp
-    devices:
-      - /dev/dri:/dev/dri # Optional for hardware transcoding
+      - /mnt/wsl/media-stack/config/tdarr/configs:/app/configs
+      - /mnt/wsl/media-stack/config/tdarr/logs:/app/logs
+      - /mnt/wsl/media-stack/data/media:/media
+      - /mnt/wsl/media-stack/data/transcode_cache:/temp
+    # Optional GPU acceleration
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     networks:
       - media-net
     restart: unless-stopped
 
   homarr:
-    image: ghcr.io/ajnart/homarr:latest
+    image: ghcr.io/homarr-labs/homarr:latest
     container_name: homarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=America/Denver
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
     volumes:
-      - /opt/docker/config/homarr/configs:/app/data/configs
-      - /opt/docker/config/homarr/icons:/app/public/icons
+      - /mnt/wsl/media-stack/config/homarr/configs:/app/data/configs
+      - /mnt/wsl/media-stack/config/homarr/icons:/app/public/icons
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "7575:7575"
-    networks:
+    networks: 
       - media-net
     restart: unless-stopped
 
@@ -190,7 +211,7 @@ services:
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=info
-      - TZ=Etc/UTC
+      - TZ=America/Denver
     ports:
       - "8191:8191"
     networks:
@@ -203,6 +224,6 @@ networks:
 
 secrets:
   radarr_api_key:
-    file:./secrets/radarr_api_key.txt
+    file: ./secrets/radarr_api_key.txt
   sonarr_api_key:
-    file:./secrets/sonarr_api_key.txt
+    file: ./secrets/sonarr_api_key.txt
