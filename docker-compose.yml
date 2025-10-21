@@ -10,9 +10,9 @@ services:
       - PGID=1000
       - TZ=America/Denver
     volumes:
-      - /mnt/wsl/media-stack/config/sonarr:/config
-      - /mnt/wsl/media-stack/data/media/tv:/tv
-      - /mnt/wsl/media-stack/data/downloads:/downloads
+      - ./config/sonarr:/config
+      - ./data/media/tv:/tv
+      - ./data/downloads:/downloads
     ports:
       - "8989:8989"
     networks:
@@ -27,9 +27,9 @@ services:
       - PGID=1000
       - TZ=America/Denver
     volumes:
-      - /mnt/wsl/media-stack/config/radarr:/config
-      - /mnt/wsl/media-stack/data/media/movies:/movies
-      - /mnt/wsl/media-stack/data/downloads:/downloads
+      - ./config/radarr:/config
+      - ./data/media/movies:/movies
+      - ./data/downloads:/downloads
     ports:
       - "7878:7878"
     networks:
@@ -44,26 +44,26 @@ services:
       - PGID=1000
       - TZ=America/Denver
     volumes:
-      - /mnt/wsl/media-stack/config/prowlarr:/config
+      - ./config/prowlarr:/config
     ports:
       - "9696:9696"
     networks:
       - media-net
     restart: unless-stopped
 
-  recyclarr:
-    image: ghcr.io/recyclarr/recyclarr:latest
-    container_name: recyclarr
-    environment:
-      - TZ=America/Denver
-    volumes:
-      - /mnt/wsl/media-stack/config/recyclarr:/config
-    secrets:
-      - radarr_api_key
-      - sonarr_api_key
-    networks:
-      - media-net
-    restart: unless-stopped
+  # recyclarr:
+  #   image: ghcr.io/recyclarr/recyclarr:latest
+  #   container_name: recyclarr
+  #   environment:
+  #     - TZ=America/Denver
+  #   volumes:
+  #     - ./config/recyclarr:/config
+  #   secrets:
+  #     - radarr_api_key
+  #     - sonarr_api_key
+  #   networks:
+  #     - media-net
+  #   restart: unless-stopped
 
   listrr:
     image: theultimatecoder/listrr.pro:latest
@@ -73,7 +73,7 @@ services:
       - PGID=1000
       - TZ=America/Denver
     volumes:
-      - /mnt/wsl/media-stack/config/listrr:/app/data
+      - ./config/listrr:/app/data
     ports:
       - "5060:80"
     networks:
@@ -89,8 +89,8 @@ services:
       - TZ=America/Denver
       - WEBUI_PORT=8080
     volumes:
-      - /mnt/wsl/media-stack/config/qbittorrent:/config
-      - /mnt/wsl/media-stack/data/downloads:/downloads
+      - ./config/qbittorrent:/config
+      - ./data/downloads:/downloads
     ports:
       - "8080:8080"
       - "6881:6881"
@@ -108,9 +108,9 @@ services:
       - TZ=America/Denver
       - NVIDIA_VISIBLE_DEVICES=all # Optional GPU acceleration
     volumes:
-      - /mnt/wsl/media-stack/config/emby:/config
-      - /mnt/wsl/media-stack/data/media/tv:/data/tv
-      - /mnt/wsl/media-stack/data/media/movies:/data/movies
+      - ./config/emby:/config
+      - ./data/media/tv:/data/tv
+      - ./data/media/movies:/data/movies
     ports:
       - "8096:8096"
       - "8920:8920" # Optional for HTTPS
@@ -139,11 +139,11 @@ services:
       - internalNode=false # We will run a separate node
       - NVIDIA_VISIBLE_DEVICES=all # Optional GPU acceleration
     volumes:
-      - /mnt/wsl/media-stack/config/tdarr/server:/app/server
-      - /mnt/wsl/media-stack/config/tdarr/configs:/app/configs
-      - /mnt/wsl/media-stack/config/tdarr/logs:/app/logs
-      - /mnt/wsl/media-stack/data/media:/media
-      - /mnt/wsl/media-stack/data/transcode_cache:/temp
+      - ./config/tdarr/server:/app/server
+      - ./config/tdarr/configs:/app/configs
+      - ./config/tdarr/logs:/app/logs
+      - ./data/media:/media
+      - ./data/transcode_cache:/temp
     ports:
       - "8265:8265" # Web UI
       - "8266:8266" # Server
@@ -174,10 +174,10 @@ services:
       - serverPort=8266
       - NVIDIA_VISIBLE_DEVICES=all # Optional GPU acceleration
     volumes:
-      - /mnt/wsl/media-stack/config/tdarr/configs:/app/configs
-      - /mnt/wsl/media-stack/config/tdarr/logs:/app/logs
-      - /mnt/wsl/media-stack/data/media:/media
-      - /mnt/wsl/media-stack/data/transcode_cache:/temp
+      - ./config/tdarr/configs:/app/configs
+      - ./config/tdarr/logs:/app/logs
+      - ./data/media:/media
+      - ./data/transcode_cache:/temp
     # Optional GPU acceleration
     deploy:
       resources:
@@ -197,8 +197,7 @@ services:
       - TZ=America/Denver
       - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
     volumes:
-      - /mnt/wsl/media-stack/config/homarr/configs:/app/data/configs
-      - /mnt/wsl/media-stack/config/homarr/icons:/app/public/icons
+      - ./config/homarr:/appdata
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "7575:7575"
@@ -214,6 +213,19 @@ services:
       - TZ=America/Denver
     ports:
       - "8191:8191"
+    networks:
+      - media-net
+    restart: unless-stopped
+
+  profilarr:
+    image: santiagosayshey/profilarr:latest
+    container_name: profilarr
+    environment:
+        - TZ=America/Denver
+    volumes:
+        - ./config/profilarr:/config
+    ports:
+        - 6868:6868
     networks:
       - media-net
     restart: unless-stopped
